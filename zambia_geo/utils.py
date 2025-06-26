@@ -1,6 +1,6 @@
 from typing import List, Tuple
 from .models import Province, City
-from .data import (
+from zambia_geo import (
     get_all_provinces,
     get_province_cities,
     get_all_cities,
