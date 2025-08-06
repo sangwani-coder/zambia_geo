@@ -75,13 +75,13 @@ To use zambia_geo package in Django model choice fields, you'll need to create c
 
 To make the city choices dynamic based on the selected province, you'll need to use JavaScript or Django's form facilities:
 
-**Option 1: Using Django Forms with JavaScript:**
+**Step 1: Using Django Forms with JavaScript:**
 
     # forms.py
     from django import forms
     from .models import UserProfile
-    from zambia_geo.utils import get_province_choices
-
+    from zambia_geo.utils import get_province_choices, get_city_choices
+    
     class UserProfileForm(forms.ModelForm):
         class Meta:
             model = UserProfile
@@ -89,116 +89,103 @@ To make the city choices dynamic based on the selected province, you'll need to 
         
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
-            self.fields['province'].choices = get_province_choices()
-            self.fields['city'].choices = []
+            self.fields['province'].choices = [('', 'Select Province')] + get_province_choices()
+            self.fields['city'].choices = [('', 'Select City')]
             
-            if 'province' in self.data:
-                try:
-                    province_name = self.data.get('province')
-                    self.fields['city'].choices = get_city_choices(province_name)
-                except (ValueError, TypeError):
-                    pass
-            elif self.instance.pk and self.instance.province:
-                self.fields['city'].choices = get_city_choices(self.instance.province)
+            # Set initial city choices if province is already selected
+            if self.instance and self.instance.province:
+                self.fields['city'].choices = [('', 'Select City')] + get_city_choices(self.instance.province)
 
-**Option 2: JavaScript Implementation:**
-
-If you prefer a pure JavaScript solution, here's how to implement it:
-
-    <!-- In your template -->
-    <form method="post">
-        {% csrf_token %}
-        
-        <div class="form-group">
-            <label for="province">Province</label>
-            <select class="form-control" id="province" name="province">
-                <option value="">Select Province</option>
-                {% for value, label in province_choices %}
-                    <option value="{{ value }}" {% if value == selected_province %}selected{% endif %}>{{ label }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        
-        <div class="form-group">
-            <label for="city">City</label>
-            <select class="form-control" id="city" name="city">
-                <option value="">Select City</option>
-                {% for value, label in city_choices %}
-                    <option value="{{ value }}" {% if value == selected_city %}selected{% endif %}>{{ label }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        
-        <button type="submit" class="btn btn-primary">Submit</button>
-    </form>
-
-    <script>
-    document.getElementById('province').addEventListener('change', function() {
-        const province = this.value;
-        const citySelect = document.getElementById('city');
-        
-        // Clear existing options
-        citySelect.innerHTML = '<option value="">Select City</option>';
-        
-        if (province) {
-            // Fetch cities for the selected province
-            fetch(`/api/cities/?province=${province}`)
-                .then(response => response.json())
-                .then(data => {
-                    data.cities.forEach(city => {
-                        const option = document.createElement('option');
-                        option.value = city.name;
-                        option.textContent = city.name;
-                        citySelect.appendChild(option);
-                    });
-                });
-        }
-    });
-    </script>
-
-### Create an API endpoint for cities (optional)
+**Step 2: Create a View to handle Ajax Request**
 
     # views.py
     from django.http import JsonResponse
-    from zambia_geo import get_province_cities
-
-    def get_cities(request):
+    from zambia_geo.utils import get_city_choices
+    
+    def load_cities(request):
         province = request.GET.get('province')
         if province:
-            cities = get_province_cities(province)
-            cities_data = [{'name': city.name} for city in cities]
-            return JsonResponse({'cities': cities_data})
+            cities = get_city_choices(province)
+            return JsonResponse({'cities': cities})
         return JsonResponse({'cities': []})
+
+### Add URL Patten
 
     # urls.py
     from django.urls import path
-    from .views import get_cities
-
+    from .views import load_cities
+    
     urlpatterns = [
-        path('api/cities/', get_cities, name='get_cities'),
-        # other URLs...
+        path('load-cities/', load_cities, name='load_cities'),
+        # other paths...
     ]
 
-### Admin Integration
-To use these choices in Django admin:
+### In your template
 
     # admin.py
-    from django.contrib import admin
-    from .models import UserProfile
-    from zambia_geo.utils import get_province_choices, get_city_choices
-
-    class UserProfileAdmin(admin.ModelAdmin):
-        list_display = ('province', 'city')
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <form method="post" id="profileForm">
+        {% csrf_token %}
         
-        def get_form(self, request, obj=None, **kwargs):
-            form = super().get_form(request, obj, **kwargs)
-            form.base_fields['province'].choices = get_province_choices()
+        <div class="form-group">
+            {{ form.province.label_tag }}
+            {{ form.province }}
+        </div>
+        
+        <div class="form-group">
+            {{ form.city.label_tag }}
+            {{ form.city }}
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Save</button>
+    </form>
+    
+    <script>
+    $(document).ready(function() {
+        // When province changes
+        $('#id_province').change(function() {
+            var provinceId = $(this).val();
+            var url = "{% url 'load_cities' %}";
             
-            if obj and obj.province:
-                form.base_fields['city'].choices = get_city_choices(obj.province)
-            else:
-                form.base_fields['city'].choices = []
+            // Clear and disable city dropdown
+            $('#id_city').html('<option value="">Select City</option>');
             
-            return form
+            if (provinceId) {
+                // Fetch cities for selected province
+                $.ajax({
+                    url: url,
+                    data: {
+                        'province': provinceId
+                    },
+                    success: function(data) {
+                        // Populate city dropdown
+                        var options = '<option value="">Select City</option>';
+                        $.each(data.cities, function(index, city) {
+                            options += '<option value="' + city[0] + '">' + city[1] + '</option>';
+                        });
+                        $('#id_city').html(options);
+                    }
+                });
+            }
+        });
+    });
+    </script>
 
-    admin.site.register(UserProfile, UserProfileAdmin)
+### Update your view to Handle your Form
+
+    # views.py
+    from django.shortcuts import render, redirect
+    from .forms import UserProfileForm
+    
+    def profile_view(request):
+        if request.method == 'POST':
+            form = UserProfileForm(request.POST, instance=request.user.profile)
+            if form.is_valid():
+                form.save()
+                return redirect('success_url')
+        else:
+            form = UserProfileForm(instance=request.user.profile)
+        
+        return render(request, 'profile_form.html', {'form': form})
