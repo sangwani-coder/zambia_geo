@@ -89,6 +89,7 @@ All contributors must adhere to our [Code of Conduct](CODE_OF_CONDUCT.md). Pleas
     ]
 }
 ```
+## Testing
 ### Add tests for new data in tests/test_data.py
 Run the test suite with:
 ```bash
@@ -138,14 +139,14 @@ Zambia Geo version: X.Y.Z
 Python version: 3.X
 OS: Windows/Linux/Mac
 ```
-### Requesting Features
+## Requesting Features
 **For feature requests**:
 - Check if a similar request exists
 - Describe the feature and its benefits
 - Provide use cases
 - Suggest implementation ideas if possible
 
-### Code Review
+## Code Review
 **All PRs require**:
 - Two approving reviews
 - Passing CI checks
@@ -158,5 +159,5 @@ OS: Windows/Linux/Mac
 - Ensure proper test coverage
 - Validate data accuracy
 
-### License
+## License
 By contributing, you agree to license your work under the project's MIT License.
