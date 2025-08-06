@@ -198,3 +198,112 @@ To make the city choices dynamic based on the selected province, you'll need to 
             form = UserProfileForm(instance=request.user.profile)
         
         return render(request, 'profile_form.html', {'form': form})
+
+## Usage in Flask
+
+      flask_zambia_app/
+      ├── app.py
+      ├── templates/
+      │   └── index.html
+      └── requirements.txt
+
+
+### Flask Application Code:
+
+      # app.py
+      from flask import Flask, render_template, request, jsonify
+      from zambia_geo.utils import get_province_choices, get_city_choices
+      
+      app = Flask(__name__)
+      
+      @app.route('/', methods=['GET', 'POST'])
+      def index():
+          if request.method == 'POST':
+              # Process form submission
+              province = request.form.get('province')
+              city = request.form.get('city')
+              return f"Selected: {province} Province, {city} City"
+          
+          # GET request - show the form
+          provinces = get_province_choices()
+          return render_template('index.html', provinces=provinces)
+      
+      @app.route('/get_cities')
+      def get_cities():
+          province = request.args.get('province')
+          if province:
+              cities = get_city_choices(province)
+              return jsonify({'cities': cities})
+          return jsonify({'cities': []})
+      
+      if __name__ == '__main__':
+          app.run(debug=True)
+
+### Template File:
+
+      <!-- index.html -->
+      <!DOCTYPE html>
+      <html>
+      <head>
+          <title>Zambia Provinces and Cities</title>
+          <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+          <style>
+              .form-group { margin-bottom: 15px; }
+              select { padding: 8px; width: 300px; }
+          </style>
+      </head>
+      <body>
+          <h1>Select Location in Zambia</h1>
+          
+          <form method="POST">
+              <div class="form-group">
+                  <label for="province">Province:</label>
+                  <select id="province" name="province" required>
+                      <option value="">Select Province</option>
+                      {% for code, name in provinces %}
+                          <option value="{{ code }}">{{ name }}</option>
+                      {% endfor %}
+                  </select>
+              </div>
+              
+              <div class="form-group">
+                  <label for="city">City:</label>
+                  <select id="city" name="city" required disabled>
+                      <option value="">Select City (choose province first)</option>
+                  </select>
+              </div>
+              
+              <button type="submit">Submit</button>
+          </form>
+      
+          <script>
+          $(document).ready(function() {
+              $('#province').change(function() {
+                  var province = $(this).val();
+                  var $citySelect = $('#city');
+                  
+                  $citySelect.empty().prop('disabled', true);
+                  
+                  if (province) {
+                      $citySelect.append('<option value="">Loading cities...</option>');
+                      
+                      $.getJSON('/get_cities', {province: province}, function(data) {
+                          $citySelect.empty().append('<option value="">Select City</option>');
+                          
+                          $.each(data.cities, function(index, city) {
+                              $citySelect.append(
+                                  $('<option>', {
+                                      value: city[0],
+                                      text: city[1]
+                                  })
+                              );
+                          });
+                          
+                          $citySelect.prop('disabled', false);
+                      });
+                  }
+              });
+          });
+          </script>
+      </body>
+      </html>
