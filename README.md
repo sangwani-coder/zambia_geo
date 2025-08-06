@@ -9,21 +9,30 @@ A Python package containing Zambian provinces and cities data.
 * Search for cities
 * Validate province and city names
 
-## How to Use Locally
+## Install in Development Mode Locally
 
 1. Create a virtual environment:
-```bash```
-    
-    python -m venv venv
-    source venv/bin/activate  # On Windows: venv\Scripts\activate
+   
+        python -m venv venv
+        source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-2. Install the package in development mode:
+3. Install the package in development mode:
+   
+        git clone https://github.com/sangwani-coder/zambia_geo.git
+        cd zambia_geo
+        pip install -e .
 
-    pip install -e .
+4. Run Tests
 
-3. Run Tests
+        python -m pytest tests/
+## Alternative Installation Methods
+### Installation in a Project - Force Install
 
-    python -m pytest tests/
+    pip install --force-reinstall git+https://github.com/sangwani-coder/zambia_geo.git
+
+### Download the ZIP and install
+    wget https://github.com/sangwani-coder/zambia_geo/archive/main.zip
+    pip install main.zip
 
 ### Now you can import and use the package in your Python code:
 
