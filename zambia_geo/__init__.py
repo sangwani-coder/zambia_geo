@@ -12,20 +12,20 @@ from .data import (
     search_cities,
     get_all_cities,
     validate_province,
-    validate_city
+    validate_city,
 )
 
 from .models import Province, City
 
 __version__ = "0.1.0"
 __all__ = [
-    'get_all_provinces',
-    'get_province_cities',
-    'get_city_details',
-    'search_cities',
-    'get_all_cities',
-    'validate_province',
-    'validate_city',
-    'Province',
-    'City'
+    "get_all_provinces",
+    "get_province_cities",
+    "get_city_details",
+    "search_cities",
+    "get_all_cities",
+    "validate_province",
+    "validate_city",
+    "Province",
+    "City",
 ]

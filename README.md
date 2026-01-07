@@ -24,7 +24,7 @@ A Python package containing Zambian provinces and cities data.
 
 4. Run Tests
 
-        python -m pytest tests/
+        python3 -m pytest tests/
 ## Alternative Installation Methods
 ### Installation in a Project - Force Install
 
