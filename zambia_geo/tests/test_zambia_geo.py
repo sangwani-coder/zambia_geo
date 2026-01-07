@@ -3,6 +3,7 @@ from zambia_geo import (
     get_all_provinces,
     get_province_cities,
     get_city_details,
+    get_constituencies,
     validate_province,
     validate_city,
     Province,
@@ -11,6 +12,11 @@ from zambia_geo import (
 
 
 class TestZambiaGeo(unittest.TestCase):
+    def test_get_constituencies(self):
+        consts = get_constituencies("Copperbelt")
+        self.assertIsInstance(consts, list)
+        self.assertIn("Ndola Central", consts)
+
     def test_get_all_provinces(self):
         provinces = get_all_provinces()
         self.assertEqual(len(provinces), 10)

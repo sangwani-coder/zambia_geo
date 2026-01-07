@@ -144,6 +144,13 @@ def get_province_cities(province_name: str) -> List[City]:
         for city in province.get("cities", [])
     ]
 
+def get_constituencies(province_name: str) -> List:
+    province = ZC.get(province_name.title())
+    if not province:
+        return []
+
+    return province
+
 
 def get_city_details(city_name: str) -> Optional[City]:
     """Get details about a specific city."""

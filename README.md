@@ -9,6 +9,18 @@ A Python package containing Zambian provinces and cities data.
 * Search for cities
 * Validate province and city names
 
+## New in v0.2.0: Constituencies
+You can now fetch constituencies for each province or district:
+
+```python
+    from zambia_geo import get_constituencies
+```
+
+# Get constituencies for a specific province
+constituencies = get_constituencies("Southern")
+for c in constituencies:
+    print(c.name)
+
 ## Install in Development Mode Locally
 
 1. Create a virtual environment:
